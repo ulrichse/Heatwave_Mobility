@@ -135,7 +135,7 @@ dat <- dat %>%
 # QC
 table(is.na(dat$poi_category))
 
-
+write_parquet(dat, "Data/Weekly_Patterns_POI_2022_2024.parquet")
 
 
 
