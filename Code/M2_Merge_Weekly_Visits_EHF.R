@@ -41,7 +41,7 @@ dat$raw_visitor_counts[is.na(dat$raw_visitor_counts)] <- 0
 
 # EHF heatwave metrics: 
 ehf <- read_parquet("Data/Temp/Processed/CBG_2010/EHF_Heatwave_NC2010CBG_2012_2024.parquet")%>%
-  filter(Date >= "2021-12-27" & Date <= "2024-07-31")%>% # Filter dates to match mobility data
+  filter(Date >= "2021-12-27" & Date <= "2024-12-30")%>% # Filter dates to match mobility data
   mutate(poi_cbg=as.numeric(cbg))%>% # Duplicate and rename cbg column to match mobility data for the join
   mutate(date_range_start = floor_date(Date - days(1), "week") + days(1)) %>% # Create weekly date variable to match mobility dataset
   group_by(poi_cbg, date_range_start) %>%
@@ -54,6 +54,8 @@ ehf <- read_parquet("Data/Temp/Processed/CBG_2010/EHF_Heatwave_NC2010CBG_2012_20
          EHF_high = high_intensity, 
          EHF_severe = Severe_Heatwaves, 
          EHF_extreme = Extreme_Heatwaves)
+
+summary(is.na(ehf))
 
 
 # Group the mobility data by date, census block group, and poi_category, and then 
@@ -74,25 +76,23 @@ naics <- dat %>%
 dat_grp <- dat_grp %>%
   left_join(naics, by = "naics_code")
 rm(naics)
-  
-# Merge with heatwave data 
 
-dat_merge <- dat_grp %>%
-  left_join(ehf, by=c("poi_cbg", "date_range_start"))
+# Read in census block group file because of join issues
 
-write_parquet(dat_merge, "Data/Weekly_Series_Visits_EHF_Merge_2022_2024.parquet")
+cbgs <- block_groups(state = "NC", year = 2010) %>%
+  mutate(poi_cbg = as.numeric(GEOID10)) %>%
+  select(poi_cbg, geometry, ALAND10, AWATER10)
+
+cbgs <- cbgs %>%
+  left_join(dat_grp, by = 'poi_cbg')%>%
+  left_join(ehf, by = c('poi_cbg', 'date_range_start'))
+
+cbgs <- cbgs %>%
+  st_drop_geometry()
+
+write_parquet(cbgs, "Data/Weekly_Series_Visits_EHF_Merge_2022_2024.parquet")
 
 gc()
-
-
-
-
-
-
-
-
-
-
 
 
 
