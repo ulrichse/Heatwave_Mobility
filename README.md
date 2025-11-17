@@ -109,7 +109,17 @@ This script processes North Carolina SafeGraph (Advan) Weekly Patterns data to c
 - **DESCRIPTION:**
 This script aggregates the total visitors and visits to POIs by week and NAICS code for each census block group, and aggregates the number of EHF-based heatwave events and their intensities from the daily to the weekly level. The weekly mobility and heatwave datasets are merged at the census block group level. 
 
+### PART IV: Analysis
 
+#### Create_Pop_File.R
+- **INPUT:**
+  - [NHGIS 2020 to 2010 CBG Crosswalk File](https://www.nhgis.org/geographic-crosswalks#to-block-groups)
+    
+- **OUTPUT:** 
+  - *annual_acs_population_2012_2024_2010cbg.csv*
+
+- **DESCRIPTION:**
+- Uses `tidycensus` package to create annual population counts at 2010 census block group geographies for 2012 to 2024. 
 
 
 
