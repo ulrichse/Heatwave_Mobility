@@ -65,7 +65,7 @@ Percentile thresholds used to define heatwave events are derived at the climate 
 
 ### PART II: Processing cell-phone-based mobility data
 
-#### M1_Process_POI_Categories_Weekly.R
+#### M1_Process_Weekly_Summary.R
 
 - **INPUT:**
   - Advan/SafeGraph weekly patterns 
@@ -78,7 +78,7 @@ Percentile thresholds used to define heatwave events are derived at the climate 
   - *Weekly_Patterns_POI_2022_2024.parquet*
 
 - **DESCRIPTION:**
-This script processes North Carolina SafeGraph (Advan) Weekly Patterns data to categorize Points of Interest (POIs) by industry using NAICS codes. It reads in POI metadata and assigns each location to a standardized industry category based on NAICS codes (e.g., Retail, Healthcare, Accommodation) and also classifies POIs into higher-level groupings (e.g., "Anchor" institutions like manufacturing or utilities). Weekly visitation summaries are merged with the categorized POI metadata. 
+This script merges North Carolina SafeGraph/Advan weekly raw visitor and visit counts (2022-2024) to each Point of Interest (POI) with POI metadata (NAICS code, NAICS top category, NAICS subcategory). 
 
 ### PART III: Merging mobility and heatwave datasets
 
