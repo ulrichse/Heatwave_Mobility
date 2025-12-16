@@ -1,6 +1,7 @@
 ### PART I: Processing temperature metrics and defining heatwave events. 
 
 #### HW1_Process_PRISM_Rasters.R
+<details>
 - **INPUT:**  Gridded raster temperature daily metrics from PRISM using `get_prism_dailys()`
 
 - **DATA SOURCE:**  [PRISM](https://prism.oregonstate.edu/recent/)
@@ -10,7 +11,7 @@
 
 - **DESCRIPTION:**
 Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into daily time series at the specified geographic unit level. In this case, the selected geography is the census block group level in North Carolina (2010 boundaries, n=6,155). 
-
+</details>
 #### HW2_Identify_Heatwaves.R
 - **INPUT:** 
   - *PRISM_Dailys_2012_2024_CBG2010.parquet*
