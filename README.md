@@ -6,19 +6,18 @@
 - **DATA SOURCE:**  [PRISM](https://prism.oregonstate.edu/recent/)
 
 - **OUTPUT:** 
-  - *PRISM_dailys_2012_2024_CBG2020.parquet*
-  - *PRISM_dailys_2012_2024_CBG2010.parquet*
+  - *PRISM_Dailys_2012_2024_CBG2010*
 
 - **DESCRIPTION:**
-Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into daily time series at the specified geographic unit level. In this case, the selected geography is the census block group level in North Carolina, both for 2010 (n=6,155) and 2020 (n=~7100). 
+Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into daily time series at the specified geographic unit level. In this case, the selected geography is the census block group level in North Carolina (2010 boundaries, n=6,155). 
 
-#### HW2_Identify_Heatwave_Events.R
+#### HW2_Identify_Heatwaves.R
 - **INPUT:** 
-  - *PRISM_dailys_2012_2024_CBG2010.parquet*
+  - *PRISM_Dailys_2012_2024_CBG2010.parquet*
   - [NOAA NCEI CONUS Climate Divisions dataset](https://www.ncei.noaa.gov/pub/data/cirs/climdiv/)
  
 - **OUTPUT:** 
-  - *HW_NC2010CBG_2012_2024.parquet*
+  - *NC_CBG2010_Heatwaves.parquet*
 
 - **SOURCE:** 
 Code adapted from Luke Wertis ([GitHub Repository](https://github.com/wertisml/Heatwave/tree/main)) and from [Ivan Hanigan] (https://rdrr.io/github/swish-climate-impact-assessment/ExcessHeatIndices/f/README.md)
@@ -64,21 +63,55 @@ Percentile thresholds used to define heatwave events are derived at the climate 
   Bivariate heatwave events are defined as 2, 3, or 4 consecutive days where both the minimum and maximum daily temperature was above the respective minimum or maximum temperature threshold for that census block group (ex. above_tmin_tmax_pct_90_two_days).  
 
 ### PART II: Processing cell-phone-based mobility data
-
-#### M1_Process_Weekly_Summary.R
-
+#### M1_POI_Info.R 
 - **INPUT:**
-  - Advan/SafeGraph weekly patterns 
-  - Advan/SafeGraph weekly patterns POI information
+  - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_poi_info_plus_)*
     
 - **REFERENCE:**
   - [NAICS Codebook](https://www.census.gov/naics/?58967?yearbck=2022)
 
 - **OUTPUT:** 
-  - *Weekly_Patterns_POI_2022_2024.parquet*
+  - *POI_Info_Plus_2022_2024.parquet*
 
 - **DESCRIPTION:**
-This script merges North Carolina SafeGraph/Advan weekly raw visitor and visit counts (2022-2024) to each Point of Interest (POI) with POI metadata (NAICS code, NAICS top category, NAICS subcategory). 
+This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS code, NAICS top category, NAICS subcategory) into a single file. 
+
+#### M2_Weekly_POI_Visits.R
+
+- **INPUT:**
+  - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_summary)*
+  - *POI_Info_Plus_2022_2024.parquet*
+
+- **OUTPUT:** 
+  - *Weekly_POI_Visits_2022_2024.parquet*
+
+- **DESCRIPTION:**
+This script merges North Carolina SafeGraph/Advan weekly POI visitor and visit counts (2022-2024) into a single file with POI metadata (NAICS code, NAICS top category, NAICS subcategory).
+
+#### M3_Weekly_CBG_Trips.R
+
+- **INPUT:**
+  - Advan/SafeGraph Weekly Patterns *(NC_weeklypattens_od_home)*
+  - *CBG2010_Database.csv* (Contains 2019 population count, NCEI climate division, RUCA category, and physiographic region for each CBG)
+  - *POI_Info_Plus_2022_2024.parquet*
+
+- **OUTPUT:** 
+  - *Weekly_CBG_Trips_2022_2024.parquet*
+
+- **DESCRIPTION:**
+Construct a weekly time series for each CBG in NC with the total number of trips taken outside of the home CBG, as well as trip counts stratified by distance. Uses destination/POI CBG from the POI metadata file and constructs a CBG distance matrix to create travel distance categories. Includes attribute information for each CBG. 
+
+#### M4_Daily_POI_Visits.R
+
+- **INPUT:**
+  - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_daily)*
+  - *POI_Info_Plus_2022_2024.parquet*
+
+- **OUTPUT:** 
+  - *Daily_Patterns_POI_2022_2024.parquet*
+
+- **DESCRIPTION:**
+Pivot weekly visit and visitor counts for each POI into a daily time series. 
 
 ### PART III: Merging mobility and heatwave datasets
 
