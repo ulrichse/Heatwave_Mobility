@@ -182,6 +182,19 @@ Predict weekly quantity of away visits based on number of days in a week under a
 - Output file indicates rural-urban and physiographic region for each CBG. 
 </details>
 
+<details>
+<summary><strong>Create_Distance_Matrix.R</strong></summary>
+  
+- **INPUT:**
+  - Census block group boundaries from the `tigris` package
+    
+- **OUTPUT:** 
+  - *CBG_Dist_Matrix.parquet*
+
+- **DESCRIPTION:**
+- Calculate distance between the centroids of every CBG in NC.
+</details>
+
 
 
 
