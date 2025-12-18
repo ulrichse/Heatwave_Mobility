@@ -1,6 +1,8 @@
-### PART I: Processing temperature metrics and defining heatwave events. 
+### PART I: Identify Heatwaves
 
-<#### HW1_Process_PRISM_Rasters.R>
+<details>
+  <summary><strong> HW1_Process_PRISM_Rasters.R </strong></summary>
+  
 - **INPUT:**  Gridded raster temperature daily metrics from PRISM using `get_prism_dailys()`
 
 - **DATA SOURCE:**  [PRISM](https://prism.oregonstate.edu/recent/)
@@ -10,9 +12,10 @@
 
 - **DESCRIPTION:**
 Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into daily time series at the specified geographic unit level. In this case, the selected geography is the census block group level in North Carolina (2010 boundaries, n=6,155). 
-</#### HW1_Process_PRISM_Rasters.R>
-
-#### HW2_Identify_Heatwaves.R
+</details>
+<details>
+<summary><strong> HW2_Identify_Heatwaves.R </strong></summary>
+  
 - **INPUT:** 
   - *PRISM_Dailys_2012_2024_CBG2010.parquet*
   - [NOAA NCEI CONUS Climate Divisions dataset](https://www.ncei.noaa.gov/pub/data/cirs/climdiv/)
@@ -21,10 +24,12 @@ Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into dai
   - *NC_CBG2010_Heatwaves.parquet*
 
 - **SOURCE:** 
-Code adapted from Luke Wertis ([GitHub Repository](https://github.com/wertisml/Heatwave/tree/main)) and from [Ivan Hanigan] (https://rdrr.io/github/swish-climate-impact-assessment/ExcessHeatIndices/f/README.md)
+Code adapted from Luke Wertis ([GitHub](https://github.com/wertisml/Heatwave/tree/main)) and from Ivan Hanigan [(GitHub)](https://rdrr.io/github/swish-climate-impact-assessment/ExcessHeatIndices/f/README.md)
 
 - **DESCRIPTION:**
-First, identify EHF-based heatwave events and second, identify percentile-threshold based heatwave events. 
+<details>
+<summary> 1) Identify EHF-based events</summary>
+
 
 Process daily time series temperature metrics from PRISM to *identify Excess Heat Factor (EHF) events*. EHF events are defined using the Excessive Heat Index (EHI), which is calculated as the 3-day average temperature in a geographic unit (e.g., census block group), subtracted from the 95th warm season (May to Sept) percentile of heat (over the specified time frame within the source dataset, in this case 2012-2024) for that same geographic unit: 
   - `EHI <- (3 Day temeprature average) - 95th temperature percentile`
@@ -52,6 +57,11 @@ Process daily time series temperature metrics from PRISM to *identify Excess Hea
   
   A high intensity heatwave occurs when the EHF for that day is greater than or equal to 2: 
     - `EHF_high = (ifelse(EHF >= 2, 1, 0))`
+</details>
+
+<details>
+  <summary> 2) Identify percentile threshold-based events </summary>
+  
 
 Percentile thresholds used to define heatwave events are derived at the climate region level. Climate region data is from the NOAA Monthly U.S. Climate Divisional Database. There are eight such climate regions across NC (NOAA). The use of regionally derived thresholds rather than fixed values or thresholds calculated across the entire state better accounts for local acclimatization to climate conditions [Grundstein & Dowd, 2011](https://journals.ametsoc.org/view/journals/apme/50/8/jamc-d-11-063.1.xml).  Geographic units (e.g. census tract, ZCTAs, or census block groups) are grouped by their corresponding climate division, and temperature thresholds are calculated based on daily average, minimum, and maximum temperature values across all geographic units within the corresponding climate region for the specified time period.  
 
@@ -62,9 +72,14 @@ Percentile thresholds used to define heatwave events are derived at the climate 
   Heatwave events are defined based on incidences of consecutive days above a specified percentile threshold. This analysis specifies a 2, 3, and 4-day duration of heat events above the 90th, 95th, and 99th percentiles for average, minimum, and maximum temperatures. The final day of a given heatwave event is denoted with a ‘1’ in the corresponding column (ex. above_tmean_pct_95_two_days).  
 
   Bivariate heatwave events are defined as 2, 3, or 4 consecutive days where both the minimum and maximum daily temperature was above the respective minimum or maximum temperature threshold for that census block group (ex. above_tmin_tmax_pct_90_two_days).  
+</details>
 
-### PART II: Processing cell-phone-based mobility data
-#### M1_POI_Info.R 
+</details>
+
+### PART II: Process Advan/Safegraph Weekly Patterns
+
+<details>
+  <summary><strong> M1_POI_Info.R </strong></summary>
 - **INPUT:**
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_poi_info_plus_)*
     
@@ -75,9 +90,12 @@ Percentile thresholds used to define heatwave events are derived at the climate 
   - *POI_Info_Plus_2022_2024.parquet*
 
 - **DESCRIPTION:**
-This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS code, NAICS top category, NAICS subcategory) into a single file. 
+This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS code, NAICS top category, NAICS subcategory) into a single file.
 
-#### M2_Weekly_POI_Visits.R
+</details>
+
+<details>
+<summary><strong>M2_Weekly_POI_Visits.R</strong></summary> 
 
 - **INPUT:**
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_summary)*
@@ -88,8 +106,10 @@ This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS cod
 
 - **DESCRIPTION:**
 This script merges North Carolina SafeGraph/Advan weekly POI visitor and visit counts (2022-2024) into a single file with POI metadata (NAICS code, NAICS top category, NAICS subcategory).
+</details>
 
-#### M3_Weekly_CBG_Trips.R
+<details>
+<summary><strong>M3_Weekly_CBG_Trips.R</strong></summary> 
 
 - **INPUT:**
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypattens_od_home)*
@@ -101,8 +121,10 @@ This script merges North Carolina SafeGraph/Advan weekly POI visitor and visit c
 
 - **DESCRIPTION:**
 Construct a weekly time series for each CBG in NC with the total number of trips taken outside of the home CBG, as well as trip counts stratified by distance. Uses destination/POI CBG from the POI metadata file and constructs a CBG distance matrix to create travel distance categories. Includes attribute information for each CBG. 
+</details>
 
-#### M4_Daily_POI_Visits.R
+<details>
+ <summary><strong>M4_Daily_POI_Visits.R</strong></summary>
 
 - **INPUT:**
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_daily)*
@@ -113,24 +135,29 @@ Construct a weekly time series for each CBG in NC with the total number of trips
 
 - **DESCRIPTION:**
 Pivot weekly visit and visitor counts for each POI into a daily time series. 
+</details>
 
-### PART III: Merging mobility and heatwave datasets
+### PART III: Analysis & Models
 
-#### M2_Merge_Weekly_Visits_EHF.R
+<details>
+<summary><strong>A1_Test_Origin_Models.R</strong></summary>
 
 - **INPUT:**
-  - *Weekly_Patterns_POI_2022_2024.parquet*
-  - *EHF_Heatwave_NC2010CBG_2012_2024.parquet*
+  - *Weekly_Away_Visits_2022_2024.parquet*
+  - *NC_CBG2010_Heatwaves.parquet*
     
 - **OUTPUT:** 
-  - *Weekly_Series_Visits_EHF_Merge_2022_2024.parquet*
+  - Model results
 
 - **DESCRIPTION:**
-This script aggregates the total visitors and visits to POIs by week and NAICS code for each census block group, and aggregates the number of EHF-based heatwave events and their intensities from the daily to the weekly level. The weekly mobility and heatwave datasets are merged at the census block group level. 
+Predict weekly quantity of away visits based on number of days in a week under a heat regime, for each heatwave definition. Aggregates heat metrics to weekly time series, analysis restricted to warm season. 
+</details>
 
-### PART IV: Analysis
+### PART IV: Additional File Creation
 
-#### Create_Pop_File.R
+<details>
+<summary><strong>Create_Pop_File.R</strong></summary>
+  
 - **INPUT:**
   - [NHGIS 2020 to 2010 CBG Crosswalk File](https://www.nhgis.org/geographic-crosswalks#to-block-groups)
     
@@ -139,7 +166,21 @@ This script aggregates the total visitors and visits to POIs by week and NAICS c
 
 - **DESCRIPTION:**
 - Uses `tidycensus` package to create annual population counts at 2010 census block group geographies for 2012 to 2024. 
+</details>
 
+<details>
+<summary><strong>Create_CBG_Database.R</strong></summary>
+  
+- **INPUT:**
+  - [NOAA NCEI CONUS Climate Divisions dataset](https://www.ncei.noaa.gov/pub/data/cirs/climdiv/)
+  - [RUCA County Codes](https://www.ers.usda.gov/data-products/rural-urban-continuum-codesRuralurbancontinuumcodes2023.csv)
+    
+- **OUTPUT:** 
+  - *CBG2010_Database.csv*
+
+- **DESCRIPTION:**
+- Output file indicates rural-urban and physiographic region for each CBG. 
+</details>
 
 
 
