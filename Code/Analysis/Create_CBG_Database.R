@@ -7,6 +7,7 @@ library(tidyverse)
 library(tmap)
 library(readr)
 library(tidycensus)
+library(readxl)
 
 # Read in NC climate division shapefile
 
@@ -41,35 +42,33 @@ climdiv <- st_transform(climdiv, crs = (st_crs(cbg_2010)))
 
 # Read in RUCC county codes from USDA ERS
 
-url <- "https://www.ers.usda.gov/data-products/rural-urban-continuum-codesRuralurbancontinuumcodes2023.csv"
+ruca <- read_csv("Data/RUCA/ruca-codes-2020-tract.csv") %>%
+  filter(StateName20=="North Carolina") %>%
+  select(TractFIPS23, TractFIPS20, PrimaryRUCA, SecondaryRUCA)
 
-library(readr)
-url <- "https://ers.usda.gov/sites/default/files/_laserfiche/DataFiles/53251/Ruralurbancontinuumcodes2023.csv?v=41737"
-df <- read_csv(url)
+cw <- read_xlsx("Data/Crosswalk/CENSUS_TRACT_CROSSWALK_2010_to_2020_2020.xlsx") %>%
+  rename(TractFIPS20 = GEOID_2020)
 
-df <- df %>%
-  filter(State == "NC") %>%
-  pivot_wider(
-    id_cols = c(FIPS, State, County_Name),       
-    names_from = Attribute,                    
-    values_from = Value                        
-  )%>%
-  mutate(
-    county = as.numeric(substr(FIPS, 3, 5)))
-  
+ruca <- ruca %>%
+  left_join(cw, by = "TractFIPS20") %>%
+  distinct(GEOID_2010, .keep_all = TRUE) %>%
+  mutate(tract = as.numeric(GEOID_2010)) %>%
+  select(tract, PrimaryRUCA, SecondaryRUCA)  
+rm(cw)
+
 # Execute spatial joins
-
 cbg_2010 <- st_join(cbg_2010, climdiv, join = st_intersects, largest = TRUE)
 
 # Join RUCC data
 
 cbg_2010 <- cbg_2010 %>%
-  left_join(df, by = 'county') 
+  mutate(tract = as.numeric(substr(cbg, 1, 11))) %>%
+  left_join(ruca, by = 'tract') 
 
 cbg_2010 <- cbg_2010 %>%
-  mutate(RUCC_Cat = ifelse(RUCC_2023 < 4, "Metro",
-                           ifelse(RUCC_2023 >= 4 & RUCC_2023 <= 7, "Suburban",
-                                  ifelse(RUCC_2023 >= 8 & RUCC_2023 <= 9, "Rural",
+  mutate(RUCC_Cat = ifelse(PrimaryRUCA < 4, "Metro",
+                           ifelse(PrimaryRUCA >= 4 &PrimaryRUCA <= 7, "Suburban",
+                                  ifelse(PrimaryRUCA >= 8 & PrimaryRUCA <= 9, "Rural",
                                                 "Undefined"))))
 
 # Add population count
@@ -99,25 +98,9 @@ cbg_2010 <- cbg_2010 %>%
 # Filter for vars of interest
 
 cbg_2010 <- cbg_2010 %>%
-  select(cbg, pop2019, CLIMDIV, CD_NEW, NAME, RUCC_2023, RUCC_Cat, phys_region) %>%
+  select(cbg, pop2019, CLIMDIV, CD_NEW, NAME, PrimaryRUCA, RUCC_Cat, phys_region) %>%
   st_drop_geometry()
 
 write.csv(cbg_2010, "Data/CBG2010_Database.csv")
 
-# Also do for 2020 CBG boundaries
-
-cbg_2020 <- st_join(cbg_2020, divisions, join = st_intersects, largest = TRUE)
-
-# Join RUCC data
-
-cbg_2020 <- cbg_2020 %>%
-  left_join(df, by = 'county')
-
-# Filter for vars of interest
-
-cbg_2020 <- cbg_2020 %>%
-  select(cbg, CLIMDIV, CD_NEW, NAME, RUCC_2023)
-
-tm_shape(cbg_2020) + 
-  tm_polygons(fill = "RUCC_2023")
 
