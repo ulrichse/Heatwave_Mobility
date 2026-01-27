@@ -2,8 +2,9 @@
 library(tidyverse)
 library(arrow)
 library(lubridate)
+library(broom)
 
-setwd("C:/Users/ulrichs/OneDrive - University of North Carolina at Chapel Hill/DIS/Heatwave_Mobility/")
+#setwd("C:/Users/ulrichs/OneDrive - University of North Carolina at Chapel Hill/DIS/Heatwave_Mobility/")
 
 # Read in datasets ----
 dat <- read_parquet("Data/Mobility/Weekly_Away_Visits_2022_2024.parquet")
@@ -14,7 +15,7 @@ heat <- read_parquet("Data/Temp/Clean/NC_CBG2010_Heatwaves.parquet")%>%
   mutate(poi_cbg=as.numeric(cbg))%>% # Duplicate and rename cbg column to match mobility data for the join
   mutate(date_range_start = floor_date(Date - days(1), "week") + days(1)) 
 
-# Group heatwaves into weekly time series ----
+# Group heatwaves into weekly time series ---- 
 heat <- heat %>% 
   select(-ends_with("days")) %>%
   group_by(poi_cbg, date_range_start) %>%
@@ -22,6 +23,7 @@ heat <- heat %>%
                    \(x) sum(x, na.rm = TRUE), 
                    .names = "{.col}")) 
 summary(is.na(heat)) # Check for NA values 
+
 
 # Detrend weekly visits ----
 
@@ -32,6 +34,101 @@ seasadj <- as.numeric(data.wts - decomp$seasonal)
 
 dat <- dat %>%
   mutate(daytime_visits_away_seasonadj = seasadj)
+
+# Plots of detrended visits ----
+
+cbg_long <- dat %>%
+  filter(phys_region == "Coast") %>%
+  group_by(date_range_start) %>%
+  summarize(
+    daytime_visits_away = sum(daytime_visits_away),
+    daytime_visits_away_seasonadj = sum(daytime_visits_away_seasonadj),
+    .groups = "drop"
+  ) %>%
+  tidyr::pivot_longer(
+    cols = c(daytime_visits_away, daytime_visits_away_seasonadj),
+    names_to  = "series",
+    values_to = "trips"
+  ) %>%
+  mutate(
+    series = recode(
+      series,
+      daytime_visits_away = "Unadjusted",
+      daytime_visits_away_seasonadj = "Seasonally adjusted"
+    )
+  )
+
+## Plot of all weeks ----
+
+ggplot(
+  cbg_long,
+  aes(
+    x = date_range_start,
+    y = trips,
+    color = series,
+    group = series
+  )
+) +
+  geom_line(linewidth = 0.4) +
+  scale_color_manual(
+    values = c(
+      "Seasonally adjusted" = "blue",
+      "Unadjusted" = "grey40"
+    )
+  ) +
+  scale_x_date(
+    date_breaks = "3 months",
+    date_labels = "%b %Y",
+    limits = as.Date(c("2022-01-01", "2024-12-31"))
+  ) +
+  labs(
+    x = "date",
+    y = "device trips",
+    color = NULL
+  ) +
+  theme_minimal()
+
+## Plot of difference between adjusted and unadjusted values (pct) ----
+ adj_plot <- dat %>%
+  group_by(date_range_start) %>%
+  summarize(
+    daytime_visits_away = sum(daytime_visits_away),
+    daytime_visits_away_seasonadj = sum(daytime_visits_away_seasonadj),
+    .groups = "drop"
+  )
+adj_plot %>%
+  mutate(
+    pct_diff = 100 *
+      (daytime_visits_away_seasonadj - daytime_visits_away) /
+      daytime_visits_away
+  ) %>%
+  ggplot(aes(date_range_start, pct_diff)) +
+  geom_line(color = "blue") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  labs(y = "% difference (adjusted vs unadjusted)")
+
+## Plot each year as a facet, warm season ---- 
+cbg_long %>%
+  filter(lubridate::month(date_range_start) %in% 5:9) %>%
+  mutate(year = lubridate::year(date_range_start)) %>%
+  ggplot(aes(date_range_start, trips, color = series)) +
+  geom_line(linewidth = 0.5) +
+  facet_wrap(~ year, scales = "free_x", ncol = 1) +
+  scale_color_manual(
+    values = c(
+      "Seasonally adjusted" = "blue",
+      "Unadjusted" = "grey40"
+    )
+  ) +
+  theme_minimal()
+
+# List of heatwave definitions ----
+
+hw_defs <- c(
+  "EHF_low", "EHF_moderate", "EHF_high",
+  grep("^above", names(heat), value = TRUE)
+)
 
 # Merge datasets ----
 cbg_dbase <- read.csv("Data/CBG2010_Database.csv")%>%
@@ -45,14 +142,41 @@ dat <-dat %>%
   mutate(year = year(date_range_start), # Create year variable
          month = month(date_range_start), # Create month variable
          pop_adjusted_trips = daytime_visits_away_seasonadj / pop2019) # Population-adjusted variable? 
+# Table of weekly average device trips ----
 
-# Remove CBGs that are water: 
-# dat <- dat %>%
-  # filter(ALAND10 > 0) # Should still do this but forgot where this came from
+results <- map_df(hw_defs, function(hw_var) {
+  
+  dat %>%
+    mutate(
+      hw_status = if_else(.data[[hw_var]] == 0, "non_hw", "hw")
+    ) %>%
+    group_by(hw_status) %>%
+    summarise(
+      n = n(),
+      visits = sum(daytime_visits_away_seasonadj) / n,
+      .groups = "drop"
+    ) %>%
+    mutate(heatwave_def = hw_var)
+})
 
-# Create lists of cbgs to filter ----
+results
 
-filter_vars <- c("EHF_any", "above_tmin_pct_90", "above_tmean_pct_90", "above_tmax_pct_90", "above_tmin_tmax_90")
+results_wide <- map_df(hw_defs, function(hw_var) {
+  
+  dat %>%
+    mutate(hw = .data[[hw_var]] != 0) %>%
+    summarise(
+      n_hw = sum(hw),
+      visits_hw = sum(daytime_visits_away_seasonadj[hw]) / n_hw,
+      n_non_hw = sum(!hw),
+      visits_non_hw = sum(daytime_visits_away_seasonadj[!hw]) / n_non_hw
+    ) %>%
+    mutate(heatwave_def = hw_var)
+})
+
+results_wide
+
+# Create lists of cbgs without heatwaves to filter ----
 
 cbgs_with_zero <- function(dat, vars, group_var = "cbg_num") {
   
@@ -69,64 +193,119 @@ cbgs_with_zero <- function(dat, vars, group_var = "cbg_num") {
     set_names(vars)
 }
 
-zero_lists <- cbgs_with_zero(dat, filter_vars)
+zero_lists <- cbgs_with_zero(dat, hw_defs)
 
+# Data filterng for model ----
+# Filter data to only the weeks that contain warm months
+dat <- dat %>%
+  mutate(week_end = date_range_start + days(6)
+  ) %>%
+  filter(month(date_range_start) <= 9 & month(week_end) >= 5
+  ) 
 
-# TEST MODELS ------------------------------------------------------------------
+# Model function ----
 
-heatwave_definitions <- dat %>% # Create a list of heatwave defintions to model
-  select(EHF_low, EHF_moderate, EHF_high, starts_with("above")) %>%
-  colnames()
-
-run_heatwave_models <- function(dat, heatwave_vars, zero_lists = NULL,
-                                warm_months = 5:9, # Filter to warm season (May to September)
-                                outcome = "daytime_visits_away_seasonadj", # Use seasonally adjusted visits
-                                family = poisson(link = "log")) {
- 
-  map(heatwave_vars, function(hw_var) {
-    
-    model_dat <- dat %>%
-      filter(month(date_range_start) %in% warm_months) %>% # Filter for warm months
-      filter(.data[[outcome]] > 0) # Filter for non-zero weekly trips
-    
-    # Remove CBGs without any heatwave events during the study period
-    if(!is.null(zero_lists) && hw_var %in% names(zero_lists)) {
-      model_dat <- model_dat %>%
-        filter(!(cbg_num %in% zero_lists[[hw_var]]))
-    }
-    
-    # Aggregate weekly visits and heatwave days
-    model_dat <- model_dat %>%
-      group_by(cbg_num, date_range_start, .data[[hw_var]]) %>%
-      summarize(
-        visits = sum(.data[[outcome]], na.rm = TRUE),
-        hw_days = sum(.data[[hw_var]], na.rm = TRUE),
-        .groups = "drop"
+run_heatwave_models <- function(
+    dat,
+    filter_expr = TRUE,   # allows full-sample models
+    hw_defs,
+    zero_lists = NULL,
+    outcome = "daytime_visits_away_seasonadj",
+    family = quasipoisson(link = "log")
+) {
+  
+  dat_sub <- dat %>%
+    filter({{ filter_expr }})
+  
+  map_df(
+    hw_defs,
+    function(hw_var) {
+      
+      # start from filtered data
+      model_dat <- dat_sub
+      
+      # remove CBGs with zero exposure if applicable
+      if (!is.null(zero_lists) && hw_var %in% names(zero_lists)) {
+        model_dat <- model_dat %>%
+          filter(!(cbg_num %in% zero_lists[[hw_var]]))
+      }
+      
+      # fit model
+      fit <- glm(
+        as.formula(paste(outcome, "~", hw_var)),
+        family = family,
+        data   = model_dat
       )
-    
-    # The actual model
-    fit <- glm(visits ~ hw_days,
-               family = family,
-               data = model_dat)
-    
-    return(fit)
-    
-  }) %>%
-    set_names(heatwave_vars)
+      
+      # tidy + extract heatwave effect
+      tidy(fit) %>%
+        filter(term != "(Intercept)") %>%
+        mutate(
+          heatwave_metric = hw_var,
+          lower_ci = estimate - 1.96 * std.error,
+          upper_ci = estimate + 1.96 * std.error
+        )
+    }
+  ) %>%
+    relocate(heatwave_metric)
 }
 
-heatwave_models <- run_heatwave_models(dat, heatwave_definitions, zero_lists)
+# Stratify data for models ---- 
 
-library(broom)
+run_heatwave_models_stratified <- function(
+    dat,
+    strat_vars = c("phys_region", "RUCC_Cat"),
+    hw_defs,
+    zero_lists = NULL
+) {
+  
+  # Full (unstratified) model
+  results_full <- run_heatwave_models(
+    dat,
+    hw_defs = hw_defs,
+    zero_lists = zero_lists
+  ) %>%
+    mutate(strat_var = "All", strat_level = "All")
+  
+  # Stratified models
+  results_strat <- map_df(
+    strat_vars,
+    function(var) {
+      
+      dat %>%
+        distinct(.data[[var]]) %>%
+        pull() %>%
+        map_df(function(level) {
+          
+          run_heatwave_models(
+            dat,
+            filter_expr = .data[[var]] == level,
+            hw_defs = hw_defs,
+            zero_lists = zero_lists
+          ) %>%
+            mutate(
+              strat_var   = var,
+              strat_level = level
+            )
+        })
+    }
+  )
+  
+  bind_rows(results_full, results_strat)
+}
 
-model_results_table <- map_df(heatwave_models, function(fit) {
-  tidy(fit) %>% 
-    filter(term == "hw_days") %>%  # only keep the heatwave effect
-    mutate(
-      lower_ci = estimate - 1.96 * std.error,
-      upper_ci = estimate + 1.96 * std.error
-    )
-}, .id = "heatwave_metric")
+results_all <- run_heatwave_models_stratified(
+  dat,
+  hw_defs = hw_defs,
+  zero_lists = zero_lists
+)
+
+write.csv(results_all, "results_all.csv")
+
+
+
+
+
 
 
 
