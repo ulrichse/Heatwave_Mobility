@@ -137,6 +137,20 @@ Construct a weekly time series for each CBG in NC with the total number of trips
 Pivot weekly visit and visitor counts for each POI into a daily time series. 
 </details>
 
+<details>
+ <summary><strong>M5_Hourly_POI_Visits.R</strong></summary>
+
+- **INPUT:**
+  - Advan/SafeGraph Hourly Patterns *(NC_weeklypatterns_hourly)*
+  - *POI_Info_Plus_2022_2024.parquet*
+
+- **OUTPUT:** 
+  - *M5_Hourly_POI_Visits_2022_2024.parquet*
+
+- **DESCRIPTION:**
+Pivot weekly visit and visitor counts for each POI into a daily time series. 
+</details>
+
 ### PART III: Analysis & Models
 
 <details>
