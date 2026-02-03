@@ -102,10 +102,10 @@ This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS cod
   - *POI_Info_Plus_2022_2024.parquet*
 
 - **OUTPUT:** 
-  - *Weekly_POI_Visits_2022_2024.parquet*
+  - *M2_Weekly_POI_Visits_2022_2024.parquet*
 
 - **DESCRIPTION:**
-This script merges North Carolina SafeGraph/Advan weekly POI visitor and visit counts (2022-2024) into a single file with POI metadata (NAICS code, NAICS top category, NAICS subcategory).
+This script reads and combines all weekly SafeGraph POI summary visitation files for North Carolina into a single dataset and enriches them with POI category metadata. The merged weekly POI visitation data are then written to a parquet file for efficient storage and downstream analysis.
 </details>
 
 <details>
@@ -117,7 +117,7 @@ This script merges North Carolina SafeGraph/Advan weekly POI visitor and visit c
   - *POI_Info_Plus_2022_2024.parquet*
 
 - **OUTPUT:** 
-  - *Weekly_CBG_Trips_2022_2024.parquet*
+  - *M3_Weekly_CBG_Trips_2022_2024.parquet*
 
 - **DESCRIPTION:**
 Construct a weekly time series for each CBG in NC with the total number of trips taken outside of the home CBG, as well as trip counts stratified by distance. Uses destination/POI CBG from the POI metadata file and constructs a CBG distance matrix to create travel distance categories. Includes attribute information for each CBG. 
@@ -131,10 +131,10 @@ Construct a weekly time series for each CBG in NC with the total number of trips
   - *POI_Info_Plus_2022_2024.parquet*
 
 - **OUTPUT:** 
-  - *Daily_Patterns_POI_2022_2024.parquet*
+  - *M4_Daily_Patterns_POI_2022_2024.parquet*
 
 - **DESCRIPTION:**
-Pivot weekly visit and visitor counts for each POI into a daily time series. 
+This script reads weekly SafeGraph POI daily visitation files and reshapes them into a true daily time series by expanding each weekly record into seven dated observations per POI. The resulting daily visit counts are then merged with POI category metadata and saved as a parquet file for later analysis.
 </details>
 
 <details>
@@ -148,7 +148,19 @@ Pivot weekly visit and visitor counts for each POI into a daily time series.
   - *M5_Hourly_POI_Visits_2022_2024.parquet*
 
 - **DESCRIPTION:**
-Pivot weekly visit and visitor counts for each POI into a daily time series. 
+This script reads weekly SafeGraph POI visitation files for North Carolina, filters them to weeks overlapping the warm season (May–September), and aggregates hourly visit counts into daily time blocks (morning, daytime, and evening/night) for each POI using efficient row-wise summation. The resulting daily POI time series is then joined with POI metadata and written out as a compressed parquet file.
+</details>
+
+<details>
+ <summary><strong>M6_Hourly_POI_Visits.R</strong></summary>
+
+- **INPUT:**
+  - *M5_Hourly_POI_Visits_2022_2024.parquet*
+- **OUTPUT:** 
+  - *M6_Hourly_Visits_Categorized_2022_2024.parquet*
+
+- **DESCRIPTION:**
+This script reads hourly POI visitation data, classifies POIs into retail, food, and indoor recreation categories based on NAICS codes, and aggregates visit counts by date, census block group, and trip purpose. The categorized and spatially aggregated hourly visit summaries are then written to a parquet file.
 </details>
 
 ### PART III: Analysis & Models
