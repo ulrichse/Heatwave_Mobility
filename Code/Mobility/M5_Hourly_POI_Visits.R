@@ -1,9 +1,11 @@
+
 # Code used to create Hourly_Patterns_POI_2022_2024.parquet, which takes weekly POI visitation 
 # and turns it into a daily time series of visits for each POI
 
 ## LOAD LIBRARIES ----
 library(tidyverse)
 library(arrow)
+library(data.table)
 
 ## READ IN DATASETS ----
 
@@ -24,49 +26,40 @@ file_dates <- tibble(
   file = file_list,
   week_start = ymd(str_extract(file_list, "\\d{4}-\\d{2}-\\d{2}")),
   week_end   = week_start + days(6)
-)
-
+) %>%
 # Keep weeks that overlap the warm season (May to Sept)
-file_dates_filt <- file_dates %>%
+# This will include weeks that begin in April, but end in May
+# or weeks that begin in September, but end in October.
+# (Note that in the conversion to a daily time series, these non-warm season 
+# days will be dropped)
   filter(
     month(week_start) <= 9,
     month(week_end)   >= 5
   )
 
 ## MERGE DAILY WARM SEASON DATA ----
-# Read only those files and combine into a single dataframe
-hourly_dat <- file_dates_filt$file %>%
+# Read only those warm season files and combine into a single dataframe
+hourly_dat <- file_dates$file %>%
   map_dfr(read_csv)
 rm(file_dates)
-rm(file_dates_filt)
 gc()
+
 ## SLICE HOURS INTO DAYS & PERIODS ----
-hourly_dat <- hourly_dat %>%
-  mutate(
-    !!!{
-      days <- 1:7
-      blocks <- list(
-        HOUR1_HOUR8   = 1:8, # morning period
-        HOUR9_HOUR16  = 9:16, # daytime period
-        HOUR17_HOUR24 = 17:24 # evening/night period
-      )
-      
-      out <- list()
-      
-      for (d in days) {
-        day_offset <- (d - 1) * 24
-        
-        for (b in names(blocks)) {
-          hrs <- blocks[[b]] + day_offset
-          cols <- paste0("HOUR", hrs)
-          
-          out[[paste0("DAY", d, "_", b)]] <-
-            expr(rowSums(across(all_of(cols)), na.rm = TRUE))
-        }
-      }
-      out
-    }
-  )
+
+setDT(hourly_dat)
+
+for (d in 1:7) {
+  day_offset <- (d - 1) * 24
+  
+  hourly_dat[, paste0("DAY", d, "_HOUR1_HOUR8") :=
+               rowSums(.SD[, 5:13 + day_offset, with = FALSE], na.rm = TRUE)]
+  
+  hourly_dat[, paste0("DAY", d, "_HOUR9_HOUR16") :=
+               rowSums(.SD[, 14:21 + day_offset, with = FALSE], na.rm = TRUE)]
+  
+  hourly_dat[, paste0("DAY", d, "_HOUR17_HOUR24") :=
+               rowSums(.SD[, 22:29 + day_offset, with = FALSE], na.rm = TRUE)]
+}
 
 #### FILTER ----
 hourly_dat <- hourly_dat %>%
