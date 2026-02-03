@@ -7,11 +7,9 @@
 
 - **DATA SOURCE:**  [PRISM](https://prism.oregonstate.edu/recent/)
 
-- **OUTPUT:** 
-  - *PRISM_Dailys_2012_2024_CBG2010*
+- **OUTPUT:** *PRISM_Dailys_2012_2024_CBG2010*
 
-- **DESCRIPTION:**
-Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into daily time series at the specified geographic unit level. In this case, the selected geography is the census block group level in North Carolina (2010 boundaries, n=6,155). 
+- **DESCRIPTION:** Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into daily time series at the specified geographic unit level. In this case, the selected geography is the census block group level in North Carolina (2010 boundaries, n=6,155). 
 </details>
 <details>
 <summary><strong> HW2_Identify_Heatwaves.R </strong></summary>
@@ -20,11 +18,9 @@ Aggregate gridded PRISM temperature metrics (tmean, tmin, tmax, tdmean) into dai
   - *PRISM_Dailys_2012_2024_CBG2010.parquet*
   - [NOAA NCEI CONUS Climate Divisions dataset](https://www.ncei.noaa.gov/pub/data/cirs/climdiv/)
  
-- **OUTPUT:** 
-  - *NC_CBG2010_Heatwaves.parquet*
+- **OUTPUT:** *NC_CBG2010_Heatwaves.parquet*
 
-- **SOURCE:** 
-Code adapted from Luke Wertis ([GitHub](https://github.com/wertisml/Heatwave/tree/main)) and from Ivan Hanigan [(GitHub)](https://rdrr.io/github/swish-climate-impact-assessment/ExcessHeatIndices/f/README.md)
+- **SOURCE:** Code adapted from Luke Wertis ([GitHub](https://github.com/wertisml/Heatwave/tree/main)) and from Ivan Hanigan [(GitHub)](https://rdrr.io/github/swish-climate-impact-assessment/ExcessHeatIndices/f/README.md)
 
 - **DESCRIPTION:**
 <details>
@@ -80,17 +76,14 @@ Percentile thresholds used to define heatwave events are derived at the climate 
 
 <details>
   <summary><strong> M1_POI_Info.R </strong></summary>
-- **INPUT:**
-  - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_poi_info_plus_)*
+  
+- **INPUT:** *Advan/SafeGraph Weekly Patterns (NC_weeklypatterns_poi_info_plus_)*
     
-- **REFERENCE:**
-  - [NAICS Codebook](https://www.census.gov/naics/?58967?yearbck=2022)
+- **REFERENCE:** [NAICS Codebook](https://www.census.gov/naics/?58967?yearbck=2022)
 
-- **OUTPUT:** 
-  - *POI_Info_Plus_2022_2024.parquet*
+- **OUTPUT:** *POI_Info_Plus_2022_2024.parquet*
 
-- **DESCRIPTION:**
-This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS code, NAICS top category, NAICS subcategory) into a single file.
+- **DESCRIPTION:** This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS code, NAICS top category, NAICS subcategory) into a single file.
 
 </details>
 
@@ -101,11 +94,9 @@ This script merges North Carolina SafeGraph/Advan weekly POI metadata (NAICS cod
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_summary)*
   - *POI_Info_Plus_2022_2024.parquet*
 
-- **OUTPUT:** 
-  - *M2_Weekly_POI_Visits_2022_2024.parquet*
+- **OUTPUT:** *M2_Weekly_POI_Visits_2022_2024.parquet*
 
-- **DESCRIPTION:**
-This script reads and combines all weekly SafeGraph POI summary visitation files for North Carolina into a single dataset and enriches them with POI category metadata. The merged weekly POI visitation data are then written to a parquet file for efficient storage and downstream analysis.
+- **DESCRIPTION:** This script reads and combines all weekly SafeGraph POI summary visitation files for North Carolina into a single dataset and enriches them with POI category metadata. The merged weekly POI visitation data are then written to a parquet file for efficient storage and downstream analysis.
 </details>
 
 <details>
@@ -116,11 +107,9 @@ This script reads and combines all weekly SafeGraph POI summary visitation files
   - *CBG2010_Database.csv* (Contains 2019 population count, NCEI climate division, RUCA category, and physiographic region for each CBG)
   - *POI_Info_Plus_2022_2024.parquet*
 
-- **OUTPUT:** 
-  - *M3_Weekly_CBG_Trips_2022_2024.parquet*
+- **OUTPUT:** *M3_Weekly_CBG_Trips_2022_2024.parquet*
 
-- **DESCRIPTION:**
-Construct a weekly time series for each CBG in NC with the total number of trips taken outside of the home CBG, as well as trip counts stratified by distance. Uses destination/POI CBG from the POI metadata file and constructs a CBG distance matrix to create travel distance categories. Includes attribute information for each CBG. 
+- **DESCRIPTION:** Construct a weekly time series for each CBG in NC with the total number of trips taken outside of the home CBG, as well as trip counts stratified by distance. Uses destination/POI CBG from the POI metadata file and constructs a CBG distance matrix to create travel distance categories. Includes attribute information for each CBG. 
 </details>
 
 <details>
@@ -130,11 +119,9 @@ Construct a weekly time series for each CBG in NC with the total number of trips
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_daily)*
   - *POI_Info_Plus_2022_2024.parquet*
 
-- **OUTPUT:** 
-  - *M4_Daily_Patterns_POI_2022_2024.parquet*
+- **OUTPUT:** *M4_Daily_Patterns_POI_2022_2024.parquet*
 
-- **DESCRIPTION:**
-This script reads weekly SafeGraph POI daily visitation files and reshapes them into a true daily time series by expanding each weekly record into seven dated observations per POI. The resulting daily visit counts are then merged with POI category metadata and saved as a parquet file for later analysis.
+- **DESCRIPTION:** This script reads weekly SafeGraph POI daily visitation files and reshapes them into a true daily time series by expanding each weekly record into seven dated observations per POI. The resulting daily visit counts are then merged with POI category metadata and saved as a parquet file for later analysis.
 </details>
 
 <details>
@@ -144,23 +131,18 @@ This script reads weekly SafeGraph POI daily visitation files and reshapes them 
   - Advan/SafeGraph Hourly Patterns *(NC_weeklypatterns_hourly)*
   - *POI_Info_Plus_2022_2024.parquet*
 
-- **OUTPUT:** 
-  - *M5_Hourly_POI_Visits_2022_2024.parquet*
+- **OUTPUT:** *M5_Hourly_POI_Visits_2022_2024.parquet*
 
-- **DESCRIPTION:**
-This script reads weekly SafeGraph POI visitation files for North Carolina, filters them to weeks overlapping the warm season (May–September), and aggregates hourly visit counts into daily time blocks (morning, daytime, and evening/night) for each POI using efficient row-wise summation. The resulting daily POI time series is then joined with POI metadata and written out as a compressed parquet file.
+- **DESCRIPTION:** This script reads weekly SafeGraph POI visitation files for North Carolina, filters them to weeks overlapping the warm season (May–September), and aggregates hourly visit counts into daily time blocks (morning, daytime, and evening/night) for each POI using efficient row-wise summation. The resulting daily POI time series is then joined with POI metadata and written out as a compressed parquet file.
 </details>
 
 <details>
  <summary><strong>M6_Hourly_POI_Visits.R</strong></summary>
 
-- **INPUT:**
-  - *M5_Hourly_POI_Visits_2022_2024.parquet*
-- **OUTPUT:** 
-  - *M6_Hourly_Visits_Categorized_2022_2024.parquet*
+- **INPUT:** *M5_Hourly_POI_Visits_2022_2024.parquet*
+- **OUTPUT:** *M6_Hourly_Visits_Categorized_2022_2024.parquet*
 
-- **DESCRIPTION:**
-This script reads hourly POI visitation data, classifies POIs into retail, food, and indoor recreation categories based on NAICS codes, and aggregates visit counts by date, census block group, and trip purpose. The categorized and spatially aggregated hourly visit summaries are then written to a parquet file.
+- **DESCRIPTION:** This script reads hourly POI visitation data, classifies POIs into retail, food, and indoor recreation categories based on NAICS codes, and aggregates visit counts by date, census block group, and trip purpose. The categorized and spatially aggregated hourly visit summaries are then written to a parquet file.
 </details>
 
 ### PART III: Analysis & Models
