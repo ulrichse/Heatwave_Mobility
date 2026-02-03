@@ -83,6 +83,7 @@ gc()
 
 write_parquet(hourly_dat, "Data/Mobility/M5_Hourly_POI_Visits_2022_2024.parquet")
 
+rm(hourly_dat)
 
 
 
