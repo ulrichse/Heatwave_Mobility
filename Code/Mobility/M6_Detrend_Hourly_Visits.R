@@ -20,7 +20,7 @@ cols_day <- grep("^DAY", names(dat), value = TRUE)
 # Melt data into long format
 dat <- melt(
   dat,
-  id.vars = c("placekey", "date_range_start", "poi_cbg", "raw_visitor_counts", "raw_visit_counts"), # keep other id columns
+  id.vars = c("placekey", "naics_code", "date_range_start", "poi_cbg", "raw_visitor_counts", "raw_visit_counts"), # keep other id columns
   measure.vars = cols_day,
   variable.name = "day_hour",
   value.name = "visits"
@@ -91,6 +91,7 @@ dat[, visits := visits - mean(visits), by = .(placekey, month)]
 dat[, visits_detrended := visits - mean(visits), by = .(placekey, dow)]
 
 write_parquet(dat, "Data/Mobility/M6_Hourly_POI_Visits_Adjusted.parquet")
+
 
 
 
