@@ -137,12 +137,21 @@ Percentile thresholds used to define heatwave events are derived at the climate 
 </details>
 
 <details>
- <summary><strong>M6_Hourly_POI_Visits.R</strong></summary>
+ <summary><strong>M6_Detrend_Hourly_Visits.R</strong></summary>
 
 - **INPUT:** *M5_Hourly_POI_Visits_2022_2024.parquet*
-- **OUTPUT:** *M6_Hourly_Visits_Categorized_2022_2024.parquet*
+- **OUTPUT:** *M6_Hourly_POI_Visits_Adjusted.parquet*
 
-- **DESCRIPTION:** This script reads hourly POI visitation data, classifies POIs into retail, food, and indoor recreation categories based on NAICS codes, and aggregates visit counts by date, census block group, and trip purpose. The categorized and spatially aggregated hourly visit summaries are then written to a parquet file.
+- **DESCRIPTION:** Reshape hourly POI visit counts into a daily time series and remove long-term trends and recurring temporal patterns by sequentially demeaning visits within each POI by year, month, and day of week, producing detrended visit counts that isolate short-term deviations in mobility. Saved as a parquet file for later analysis.
+</details>
+
+<details>
+ <summary><strong>M7_Categorize_POIs_Hourly.R</strong></summary>
+
+- **INPUT:** *M6_Hourly_POI_Visits_Adjusted.parquet*
+- **OUTPUT:** *M7_Hourly_Visits_Categorized_Adjusted.parquet*
+
+- **DESCRIPTION:** This script reads hourly POI visitation data (with adjusted values), classifies POIs into retail, food, and indoor recreation categories based on NAICS codes, and aggregates visit counts by date, census block group, and trip purpose. The categorized and spatially aggregated hourly visit summaries are then written to a parquet file.
 </details>
 
 ### PART III: Analysis & Models
