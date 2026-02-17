@@ -136,24 +136,6 @@ Percentile thresholds used to define heatwave events are derived at the climate 
 - **DESCRIPTION:** This script reads weekly SafeGraph POI visitation files for North Carolina, filters them to weeks overlapping the warm season (May–September), and aggregates hourly visit counts into daily time blocks (morning, daytime, and evening/night) for each POI using efficient row-wise summation. The resulting daily POI time series is then joined with POI metadata and written out as a compressed parquet file.
 </details>
 
-<details>
- <summary><strong>M6_Detrend_Hourly_Visits.R</strong></summary>
-
-- **INPUT:** *M5_Hourly_POI_Visits_2022_2024.parquet*
-- **OUTPUT:** *M6_Hourly_POI_Visits_Adjusted.parquet*
-
-- **DESCRIPTION:** Reshape hourly POI visit counts into a daily time series and remove long-term trends and recurring temporal patterns by sequentially demeaning visits within each POI by year, month, and day of week, producing detrended visit counts that isolate short-term deviations in mobility. Saved as a parquet file for later analysis.
-</details>
-
-<details>
- <summary><strong>M7_Categorize_POIs_Hourly.R</strong></summary>
-
-- **INPUT:** *M6_Hourly_POI_Visits_Adjusted.parquet*
-- **OUTPUT:** *M7_Hourly_Visits_Categorized_Adjusted.parquet*
-
-- **DESCRIPTION:** This script reads hourly POI visitation data (with adjusted values), classifies POIs into retail, food, and indoor recreation categories based on NAICS codes, and aggregates visit counts by date, census block group, and trip purpose. The categorized and spatially aggregated hourly visit summaries are then written to a parquet file.
-</details>
-
 ### PART III: Analysis & Models
 
 <details>
