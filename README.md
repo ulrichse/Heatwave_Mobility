@@ -113,15 +113,15 @@ Percentile thresholds used to define heatwave events are derived at the climate 
 </details>
 
 <details>
- <summary><strong>M4_Daily_POI_Visits.R</strong></summary>
+ <summary><strong>M4_Daily_CBG_Visits.R</strong></summary>
 
 - **INPUT:**
   - Advan/SafeGraph Weekly Patterns *(NC_weeklypatterns_daily)*
   - *POI_Info_Plus_2022_2024.parquet*
 
-- **OUTPUT:** *M4_Daily_Patterns_POI_2022_2024.parquet*
+- **OUTPUT:** *M4_Daily_CBG_Visits_Expected.parquet*
 
-- **DESCRIPTION:** This script reads weekly SafeGraph POI daily visitation files and reshapes them into a true daily time series by expanding each weekly record into seven dated observations per POI. The resulting daily visit counts are then merged with POI category metadata and saved as a parquet file for later analysis.
+- **DESCRIPTION:** This script reads weekly SafeGraph POI daily visitation files, aggregates total visits from the POI to the census block group level, and reshapes them into a true daily time series by expanding each weekly record into seven dated observations per CBG. The resulting daily visit counts are then detrended using rolling means over 365, 30, and 7-day periods, and then saved as a parquet file for later analysis.
 </details>
 
 <details>
